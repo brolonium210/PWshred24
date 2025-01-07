@@ -35,11 +35,12 @@ import java.awt.image.BufferedImage;
 public class DeShredder {
 
     // Fields to store the lists of Shreds and strips.  These should never be null.
-    private List<Shred> allShreds = new ArrayList<Shred>();    //  List of all shreds
-    private List<Shred> workingStrip = new ArrayList<Shred>(); // Current strip of shreds
-    private List<List<Shred>> completedStrips = new ArrayList<List<Shred>>();
+    private final List<Shred> allShreds = new ArrayList<Shred>();    //  List of all shreds
+    private final List<Shred> workingStrip = new ArrayList<Shred>(); // Current strip of shreds
+    private final List<List<Shred>> completedStrips = new ArrayList<List<Shred>>();
 
     public Shred swapShred;
+    public List<Shred> swapList;
     public double swapX;
     public double swapY;
 
@@ -62,10 +63,9 @@ public class DeShredder {
 
     //Fields for recording where the mouse was pressed  (which list/strip and position in list)
     // note, the position may be past the end of the list!
-    private List<Shred> fromStrip;   // The strip (List of Shreds) that the user pressed on
-    private int fromPosition = -1;   // index of shred in the strip
-    private Boolean mousePressed = false;
-
+    List<Shred> fromStrip;   // The strip (List of Shreds) that the user pressed on
+    int fromPosition = -1;   // index of shred in the strip
+    private final Boolean mousePressed = false;
     /**
      * Initialises the UI window, and sets up the buttons. 
      */
@@ -182,45 +182,9 @@ public class DeShredder {
      * You should not change them.
      */
     public void doMouse(String action, double x, double y){
-
         if (action.equals("pressed")){
-            if(myLevel == levels.waiting){
-                myLevel = levels.firstClick;
-                fromStrip = getStrip(y);      // the List of shreds to move from (possibly null)
-                fromPosition = getColumn(x);  // the index of the shred to move (may be off the end)
-                this.swapShred = pickUpStrip(fromStrip,fromPosition);
-            }else if(myLevel == levels.firstClick){
-                myLevel = levels.waiting;
-
-                    List<Shred> toStrip = getStrip(y); // the List of shreds to move to (possibly null)
-                    int toPosition;
-                    //do nothing if the toStrip is outside of the useful areas
-                    if(toStrip == null){
-                        assert true;
-                    }else if(toStrip.isEmpty()) {
-                        toStrip.addLast(swapShred);
-                        toPosition = 0;
-                    }else{
-                        try {
-                            toPosition = getColumn(x);
-                            toStrip.add(toPosition, swapShred);
-                            swapShred = null;
-                            // the index to move the shred to (may be off the end)
-                        }catch (IndexOutOfBoundsException e){
-                            toStrip.addLast(swapShred);
-                            swapShred = null;
-                        }
-                    }
-            }
+            mouseAction1(x,y);
         }
-//        if (action.equals("released")){
-//            List<Shred> toStrip = getStrip(y); // the List of shreds to move to (possibly null)
-//            int toPosition = getColumn(x);     // the index to move the shred to (may be off the end)
-//            toStrip.add(toPosition,swapShred);
-//            swapShred = null;
-//        }
-//        this.swapX = x;
-//        this.swapY = y;
         display();
     }
 
@@ -228,10 +192,68 @@ public class DeShredder {
 
     public Shred pickUpStrip(List<Shred> getStrip,int fromPosition){
         if(getStrip != null && fromPosition >= 0 && fromPosition < getStrip.size()){
-            Shred temp = getStrip.get(fromPosition);;
-            return temp;
+            return getStrip.get(fromPosition);
         }
         return null;
+    }
+
+    public void mouseAction1(double x, double y){
+        if(myLevel == levels.waiting){
+            myLevel = levels.firstClick;
+            fromStrip = getStrip(y);      // the List of shreds to move from (possibly null)
+            fromPosition = getColumn(x);  // the index of the shred to move (may be off the end)
+            this.swapShred = pickUpStrip(fromStrip,fromPosition);
+        }else if(myLevel == levels.firstClick){
+            myLevel = levels.waiting;
+            List<Shred> toStrip = getStrip(y); // the List of shreds to move to (possibly null)
+            int toPosition;
+            //do nothing if the toStrip is outside of the useful areas
+            if(toStrip == null){
+                assert true;
+            }else if((completedStrips.contains(fromStrip)) && (toStrip == workingStrip) && !(toStrip.isEmpty())){
+                assert true; //prevents the move from completed to working while working isnt empty
+//            }else if((toStrip.isEmpty()) && !(completedStrips.contains(fromStrip))){
+//                toStrip.addLast(swapShred);
+//                fromStrip.remove(swapShred);
+//                toPosition = 0;
+            }else{
+                /*
+                Enable the user to change the order of the completed strips, and to move a completed strip back
+                to the working strip (as long as the working strip is currently empty).
+                */
+                try {
+                    //if we are copying from completed and either to another line in completed or to working
+                    //do this
+                    if (completedStrips.contains(fromStrip)) {
+                        if(completedStrips.contains(toStrip)){
+//                            assert true;
+                            int fromInd = completedStrips.lastIndexOf(fromStrip);
+                            int toInd = completedStrips.lastIndexOf(toStrip);
+
+                            completedStrips.remove(fromStrip);
+                            completedStrips.add(toInd,fromStrip);
+                            return;
+                        }else if(toStrip == workingStrip){
+                            completedStrips.remove(fromStrip);
+                            workingStrip.addAll(fromStrip);
+                            return;
+                        }
+                    }
+                    toPosition = getColumn(x);
+                    fromStrip.remove(swapShred);
+                    toStrip.add(toPosition, swapShred);
+
+//                    swapShred = null;
+                    // the index to move the shred to (may be off the end)
+
+                }catch (IndexOutOfBoundsException e){
+                    fromStrip.remove(swapShred);
+                    toStrip.addLast(swapShred);
+//                    fromStrip.remove(swapShred);
+//                    swapShred = null;
+                }
+            }
+        }
     }
 
     //=============================================================================
@@ -254,8 +276,11 @@ public class DeShredder {
         //working strip (the one the user is workingly working on)
         x=LEFT;
         for (Shred shred : workingStrip){
-            shred.draw(x, TOP_WORKING);
-            x+=SIZE;
+            //this is added for if the working strip is empty
+            if (shred != null){
+                shred.draw(x, TOP_WORKING);
+                x+=SIZE;
+            }
         }
         UI.setColor(Color.red);
         UI.drawRect(LEFT-1, TOP_WORKING-1, SIZE*workingStrip.size()+2, SIZE+2);
@@ -271,10 +296,6 @@ public class DeShredder {
             }
             UI.drawRect(LEFT-1, y-1, SIZE*strip.size()+2, SIZE+2);
             y+=SIZE+GAP;
-        }
-        //Mouse Strip
-        if(swapShred != null) {
-            swapShred.draw(swapX, swapY);
         }
     }
 
@@ -361,7 +382,6 @@ public class DeShredder {
     public static void main(String[] args) {
         DeShredder ds =new DeShredder();
         ds.setupGUI();
-
-    }
+        }
 
 }
