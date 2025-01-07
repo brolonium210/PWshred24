@@ -143,7 +143,14 @@ public class DeShredder {
      */
     public void shuffleList(){
         /*# YOUR CODE HERE */
-        Collections.shuffle(allShreds);
+//        Collections.shuffle(allShreds);
+        Random rand = new Random();
+        for(int i=0;i<allShreds.size();i++){
+            int newLoc = rand.nextInt(allShreds.size());
+            Shred temp = allShreds.get(i);
+            allShreds.set(i,allShreds.get(newLoc));
+            allShreds.set(newLoc, temp);
+        }
         display();
     }
 
@@ -152,10 +159,10 @@ public class DeShredder {
      * (Called by the "Complete Strip" button)
      */
     public void completeStrip(){
-        /*# YOUR CODE HERE */
-        
-
-
+        List<Shred> tempList = new ArrayList<>(workingStrip);
+        completedStrips.addFirst(tempList);
+        workingStrip.clear();
+        display();
     }
 
     /**
@@ -187,7 +194,10 @@ public class DeShredder {
 
                     List<Shred> toStrip = getStrip(y); // the List of shreds to move to (possibly null)
                     int toPosition;
-                    if(toStrip.isEmpty()){
+                    //do nothing if the toStrip is outside of the useful areas
+                    if(toStrip == null){
+                        assert true;
+                    }else if(toStrip.isEmpty()) {
                         toStrip.addLast(swapShred);
                         toPosition = 0;
                     }else{
@@ -202,7 +212,6 @@ public class DeShredder {
                         }
                     }
             }
-
         }
 //        if (action.equals("released")){
 //            List<Shred> toStrip = getStrip(y); // the List of shreds to move to (possibly null)
