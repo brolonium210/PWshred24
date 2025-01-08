@@ -212,10 +212,8 @@ public class DeShredder {
                 assert true;
             }else if((completedStrips.contains(fromStrip)) && (toStrip == workingStrip) && !(toStrip.isEmpty())){
                 assert true; //prevents the move from completed to working while working isnt empty
-//            }else if((toStrip.isEmpty()) && !(completedStrips.contains(fromStrip))){
-//                toStrip.addLast(swapShred);
-//                fromStrip.remove(swapShred);
-//                toPosition = 0;
+            }else if(toStrip == allShreds){
+
             }else{
                 /*
                 Enable the user to change the order of the completed strips, and to move a completed strip back
@@ -240,17 +238,16 @@ public class DeShredder {
                         }
                     }
                     toPosition = getColumn(x);
-                    fromStrip.remove(swapShred);
-                    toStrip.add(toPosition, swapShred);
-
+                    if(swapShred!= null) {
+                        fromStrip.remove(swapShred);
+                        toStrip.add(toPosition, swapShred);
+                    }
 //                    swapShred = null;
                     // the index to move the shred to (may be off the end)
 
                 }catch (IndexOutOfBoundsException e){
                     fromStrip.remove(swapShred);
                     toStrip.addLast(swapShred);
-//                    fromStrip.remove(swapShred);
-//                    swapShred = null;
                 }
             }
         }
