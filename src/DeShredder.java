@@ -151,6 +151,8 @@ public class DeShredder {
             allShreds.set(i,allShreds.get(newLoc));
             allShreds.set(newLoc, temp);
         }
+
+        makePicture2(completedStrips);
         display();
     }
 
@@ -161,6 +163,7 @@ public class DeShredder {
     public void completeStrip(){
         List<Shred> tempList = new ArrayList<>(workingStrip);
         completedStrips.addFirst(tempList);
+//        makePicture(workingStrip);
         workingStrip.clear();
         display();
     }
@@ -211,9 +214,9 @@ public class DeShredder {
             if(toStrip == null){
                 assert true;
             }else if((completedStrips.contains(fromStrip)) && (toStrip == workingStrip) && !(toStrip.isEmpty())){
-                assert true; //prevents the move from completed to working while working isnt empty
-            }else if(toStrip == allShreds){
-
+                assert true; //prevents the move from completed to working while working isn't empty
+            }else if((toStrip == allShreds) && (fromStrip == allShreds)){
+                assert true;
             }else{
                 /*
                 Enable the user to change the order of the completed strips, and to move a completed strip back
@@ -251,6 +254,74 @@ public class DeShredder {
                 }
             }
         }
+    }
+
+    public void makePicture(List<Shred> shreds) {
+        String tempFilename = " ";
+        int tempWidth = (int) (SIZE);
+        int tempHeight = (int) (SIZE);
+        tempWidth = tempWidth * shreds.size();
+
+        Color[][] tempShred = new Color[(int) (SIZE - 1)][(int) (SIZE - 1)];
+        Color[][] tempGrid = new Color[tempHeight][tempWidth];
+        //REwrite load and save using List of Lists
+        //use Sublist to id the edges of blocks and also indexOf /lastIndexOf
+
+
+        //        ArrayList<ArrayList<Color>> tempColor = new ArrayList<>();
+//        Stack<Color> tempStack = new Stack<>();
+        //maybe deque? /Queue /follow up on how this works ,<<<<<<<<<<**********
+        for (int i = 0; i < shreds.size(); i++) {
+            tempFilename = shreds.get(i).getFilename();
+            tempShred = loadImage(tempFilename);
+            int x = 0;
+            int y = 0;
+            int xPos = (int)((i*SIZE));
+            //------------------------------------------------------------------
+            for(y =0;y<tempShred.length-1;y++){
+                for(x =0;x<tempShred[0].length-1;x++){
+                    tempGrid[y][xPos+x] = tempShred[y][x];
+                }
+            }
+            saveImage(tempGrid, "test01.png");
+        }
+    }
+
+
+    public void makePicture2(List<List<Shred>> shreds) {
+        String tempFilename = " ";
+        int tempShredWidth = (int) (SIZE);
+        int tempShredHeight = (int) (SIZE);
+        int listLength = shreds.size();
+        int tempLength = tempShredWidth * shreds.getFirst().size();
+
+        //For each list in Shreds ,get each list and then get its size
+        //then
+        //=================================================================
+        //this is def the problem //fixed ,def work off column and row terminalogy from here
+        Color[][] arrFinal = new Color[tempLength][listLength*tempShredHeight];
+//        Color[][] arrFinal = new Color[listLength*tempShredHeight][tempLength*tempShredWidth];
+        for(int i=0; i<listLength; i++){
+            List<Shred> tempShreds = shreds.get(i);
+            int yPos = (int)((i*SIZE));
+
+        for (int j = 0; j < tempShreds.size(); j++) {
+            tempFilename = tempShreds.get(j).getFilename();
+            Color[][] tempArr = loadImage(tempFilename);
+            int x = 0;
+            int y = 0;
+            int xPos = (int)((j*SIZE));
+
+
+        //------------------------------------------------------------------
+            for(y=0;y<tempArr.length-1;y++){
+                for(x =0;x<tempArr[0].length-1;x++){
+                    arrFinal[yPos+y][xPos+x] = tempArr[y][x];
+                    }
+                }
+            }
+        }
+        saveImage(arrFinal, "test01.png");
     }
 
     //=============================================================================
@@ -363,7 +434,10 @@ public class DeShredder {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 Color c =imageArray[row][col];
-                img.setRGB(col, row, c.getRGB());
+                if(c != null){
+                    img.setRGB(col, row, c.getRGB());
+
+                }
             }
         }
         try {

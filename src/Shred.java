@@ -60,4 +60,9 @@ public class Shred{
         return "ID:"+id;
     }
 
+    //this is for the save file
+    public String getFilename(){
+        return filename;
+    }
+
 }
